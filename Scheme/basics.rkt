@@ -2,6 +2,9 @@
 
 (define endOfParagraph "@---------------@")
 (define newL "#\newline")
+
+;;; #f - False, #t - True
+
 ;;; (define <символ> <израз>)
 ;;; define оценява <израз> и свързва <символ> с оценката му
 "Define"
@@ -99,3 +102,85 @@ endOfParagraph
 (atan 90)
 (expt 3 4)
 (sqrt 256)
+
+(newLine)
+endOfParagraph
+(newLine)
+
+;;; Стандартни предикати(Standard Predicates)
+"Predicates for number comparison"
+(< 2 3) ;;; return #t (2 < 3)
+(> 2 3) ;;; return #f (2 > 3)
+(= 2 2) ;;; return #t (2 =? 2)
+(= 2 3) ;;; return #f (2 =? 3)
+(<= 2 2) ;;; return #t (2 <= 2)
+(>= 2 3) ;;; return #f (2 >= 3)
+
+"Number predicates"
+(zero? 2) ;;; return #f
+(zero? 0) ;;; return #t
+(negative? -5) ;;; return #t
+(positive? -5) ;;; return #f
+(odd? 4) ;;; #f
+(even? 4) ;;; #t
+
+"Predicates for checking a type"
+(boolean? #f) ;;; return #t
+(boolean? 5) ;;; return #f
+(number? 5) ;;; return #t
+(char? #\space) ;;; return #t
+(string? "Hello") ;;; return #t
+(symbol? '+) ;;; return #t
+(procedure? +) ;;; return #t
+
+(newLine)
+endOfParagraph
+(newLine)
+
+;;; Условна форма if
+;;; (if <условие> <израз1> <израз2>)
+;;; Оценява се <условие>. Ако оценката е #t, то се връща оценката на <израз1>
+;;; Ако оценката е #f, то се връща оценката на <израз2>
+
+"If statement"
+(if (< 3 5) (+ 3 5) (* 3 5)) ;;; return 8 = 3 + 5, 3 < 5 - #t
+
+(define (absN x) (if (< x 0) (- x) x))
+(absN 5) ;;; return 5
+(absN -5) ;;; return 5
+
+(define (f x) (if (< x 5) (+ x 2) "Error"))
+(f 3) ;;; return 5
+(f 5) ;;; return "Error"
+
+(define (g x y) (if (< x y) (+ x y) (* x y)))
+(define (g x y) ((if (< x y) + *) x y))
+(g 2 3) ;;; return 5
+(g 3 2) ;;; return 6
+
+(newLine)
+endOfParagraph
+(newLine)
+
+#|
+;;; Форма за многозначен избор cond
+;;; (cond (<условие1> <израз1>)
+;;;       (<условие2> <израз2>)
+          ...
+          (<условиеN> <изразN>)
+          (else <изразN+1>
+Ако <условие1> е оценено до #t се връща <израз1>, иначе ако <условие2> е
+оценено до #t се връща <израз2>, иначе и т.н. Ако всички са оценени до #f,
+то се връша израза след else(<изразN+1>) 
+|#
+(define (grade x)
+  (cond ((> x 5.5) "Отличен")
+        ((> x 4.5) "Много Добър")
+        ((> x 3.5) "Добър")
+        ((> x 3.0) "Среден")
+        (else "Слаб")))
+(grade 5.64) ;;; return "Отличен"
+(grade 4.90) ;;; return "Много Добър"
+(grade 4.00) ;;; return "Добър"
+(grade 3.23) ;;; return "Среден"
+(grade 2.00) ;;; return "Слаб"
