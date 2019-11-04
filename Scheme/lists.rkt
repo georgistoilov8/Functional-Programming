@@ -186,3 +186,64 @@ negative? zero? positive?))) '((-2 1 0) (1 4 -1) (0 0
   (foldr max (car l) l))
 
 (max_element '(1 2 3 4))
+
+
+;;; Дълбоки списъци
+;;; Пример: ((1 (2)) (((3) 4) (5 (6)) () (7)) 8)
+;;; Задача: Да се преброят атомите в дълбокия списък
+
+(define (atom? x) (and (not (null? x)) (not (pair? x))))
+
+(define (count-atoms l)
+  ( cond ( (null? l) 0)
+         ( (atom? l) 1)
+         ( else (+ (count-atoms (car l)) (count-atoms (cdr l))))))
+
+;;; Да се съберат всички атоми от дълбок списък
+(define (flatten l)
+  (cond ( (null? l) l)
+        ( (atom? l) (list l))
+        ( else (append (flatten (car l)) (flatten (cdr l))))))
+
+(flatten '((1 (2)) (((3) 4) (5 (6)) () (7)) 8))
+
+;;; Да се обърне редът на атомите в дълбок списък
+(define (deep-reverse l)
+  (cond ((null? l) l)
+        ((atom? l) l)
+        ( else (append (deep-reverse (cdr l))
+                       (list (deep-reverse (car l)))))))
+
+(deep-reverse '((1 (2)) (((3) 4) (5 (6)) () (7)) 8))
+
+;;; Свиване на дълбоки списъци
+;;; (deep-foldr <x-дъно> <в-дъно> <операция> <списък>)
+(define (deep-foldr nv term op l)
+  (cond ((null? l) nv)
+        ((atom? l) (term l))
+        ( else (op (deep-foldr nv term op (car l))
+                   (deep-foldr nv term op (cdr l))))))
+
+(define (count-atoms l) (deep-foldr 0 (lambda (x) 1) + l))
+(count-atoms '((1 (2)) (((3) 4) (5 (6)) () (7)) 8))
+
+;;; Вместо lambda може и само list
+(define (flatten l) (deep-foldr '() (lambda (x) (list x)) append l))
+(flatten '((1 (2)) (((3) 4) (5 (6)) () (7)) 8))
+
+(define (snoc x l) (append l (list x)))
+(define (deep-reverse l) (deep-foldr '() (lambda (x) x) snoc l))
+
+;;; Как работи deep-foldr?
+;;;    - пуска себе си рекурсивно за всеки елемент на дълбокия списък
+;;;    - при достигане на вертикално дъно (атоми) се прилага терм върху тях
+;;;    - и събира резултатите с op
+
+;;; deep-foldr чрез map и foldr
+(define (branch p? f g) (lambda (x) (p? x) (f x) (g x)))
+(define (deep-foldr nv term op l)
+  (foldr op nv
+         (map (branch atom?
+                      term
+                      (lambda (l) (deep-foldr nv term op l))
+                      l))))
