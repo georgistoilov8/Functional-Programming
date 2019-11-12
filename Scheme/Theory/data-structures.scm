@@ -93,3 +93,141 @@
            (map (lambda (column) (mult-vectors row column)) m2t))
          m1)))
 ;(mult-matrices '( (5 8 -4) (6 9 -5) (4 7 -2)) '( (2) (-3) (1)))
+
+;;; Двоични дървета
+; Представяне: (<корен> <ляво> <дясно>)
+; Пример:(1 (2 () ())
+;           (3 (4 () ())
+;              (5 () ())))
+
+; Проверка за коренктност
+(define (tree? t)
+  (or (null? t)
+      (and (list t) (= (length t) 3))
+      (tree? (cadr t))
+      (tree? (caddr t))))
+
+; Конструктори:
+(define empty-tree '())
+(define (make-tree root left right) (list root left right))
+
+; Селектори
+; Взимане на корена на дървото
+(define (get-root t) (car t))
+; Взимане на лявото дете на корена
+(define (get-left t) (car (cdr t)))
+; Взимане на дясното дете на корена
+(define (get-right t) (car (cdr (cdr t))))
+; Проверка дали дървото е празно
+(define (empty-tree? t) (if (null? t) #t #f))
+
+; Дълбочина на дърво
+(define (tree-depth t)
+  (if (empty-tree? t) 0
+      (max (+ 1 (tree-depth (get-left t)))
+           (+ 1 (tree-depth (get-right t))))))
+; (tree-depth '(1 (2 () ()) (3 (4 () ()) (5 () ()))))
+
+; Намиране на поддърво
+(define (memv-tree x t)
+  (cond ((empty-tree? t) #f)
+        ((eqv? x (get-root t)) t)
+        (else (or (memv-tree x (get-left t))
+                  (memv-tree x (get-right t))))))
+;(memv-tree 3 '(1 (2 () ()) (3 (4 () ()) (5 () ()))))
+
+; Търсене на път в двоично дърво
+(define (path-tree x t)
+  (cond ((empty-tree? t) #f)
+        ((eqv? x (get-root t)) (list x))
+        (else (cons#f (get-root t)
+                      (or (path-tree x (get-left t))
+                          (path-tree x (get-right t)))))))
+(define (cons#f h t) (and t (cons h t)))
+;(path-tree 3 '(1 (2 () ()) (3 (4 () ()) (5 () ()))))
+
+;;; Асоциативни списъци (речник, хеш, map)
+; Пример: ((1 . 2) (2 . 3) (3 . 4))
+;         ((a . 10) (b . 12) (c . 18))
+;         ((l1 1 8) (l2 10 1 2) (l3))
+;         ((al1 (1 . 2) (2 . 3)) (al2 (b)) (al3 (a . b) (c . d)))
+
+; Създаване на асоциативен списък по списък от ключове и функция
+(define (make-alist f keys)
+  (map (lambda (x) (cons x (f x))) keys))
+;(make-alist (lambda (x) (* x x)) '(1 3 5))
+
+
+; Селектори за асоциативни списъци
+
+; Връща ключовете на асоциативните списъци
+(define (keys alist) (map car alist))
+; Връща стойностите на асоциативните списъци
+(define (values alist) (map cdr alist))
+
+#| Не е тествано(има вграден assoc)
+(define (assoc key alist)
+  (if (null? alist) #f
+      (if (equal? key (car (car alist))) (car alist)
+          (assoc key (cdr alist)))))
+|#
+; (assv <ключ> <асоциативен-списък>) - същото като assoc, но сравнява с eqv?
+; (assq <ключ> <асоциатевен-списък>) - същото като assoc, но сравнява с eq?
+
+; Изтриване на ключ и съответната му стойност (ако съществува)
+(define (del-assoc key alist)
+  (filter (lambda (kv) (not (equal? (car kv) key))) alist))
+; (del-assoc 3 '( (1 . 3) (2 . 4) (3 . 5)))
+
+; Задаване на стойност за ключ (изтривайки старата ако има такава)
+(define (add-assoc key value alist)
+  (cons (cons key value) (del-assoc key alist)))
+
+; Ако обаче искаме да запазим реда на ключовете? Имаме два варианта:
+; Вариант 1(грозен и по-бърз)
+(define (add-key-value key value alist)
+  (let ((new-kv (cons key value)))
+    (cond ((null? alist) (list new-kv))
+          ((eqv? (caar alist) key) (cons new-kv (cdr alist)))
+          (else (cons (car alist) (add-key-value key value (cdr alist)))))))
+
+; Вариант 2(красив и по-бавен)
+(define (add-key-value2 key value alist)
+  (let ((new-kv (cons key value)))
+    (if (assq key alist)
+        (map (lambda (kv) (if (eq? (car kv) key)
+                              new-kv kv)) alist)
+        (cons new-kv alist))))
+
+; Помощна функция(част от задача)
+(define (search p l)
+  (and (not (null? l))
+       (or (p (car l)) (search p (cdr l)))))
+
+;;; Графи
+; Графите се представят чрез асоциативни списъци
+; Ключът е върхът/възелът, а стойностите ще са възли,
+; таки че има ребро между двата.
+; Пример:((1 . (2 3))
+;         (2 . (3 6))
+;         (3 . (4 6))
+;         (4 . (1 5))
+;         (5 . (3))
+;         (6 . (5)))
+
+; Върховете на граф
+(define (vertices g) (keys g))
+
+; Децата на даден връх
+(define (children v g)
+  (cdr (assv v g)))
+
+; Съществува ли ребро между два върха
+(define (edge? u v g)
+  (memv v (children u g)))
+
+(define (map-children v f g)
+  (map f (children v g)))
+
+(define (search-child v f g)
+  (search f (children v g)))
