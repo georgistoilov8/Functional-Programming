@@ -200,9 +200,16 @@
         (cons new-kv alist))))
 
 ; Помощна функция(част от задача)
+; Да се намери има ли елемент на l, който удовлетворява p.
 (define (search p l)
   (and (not (null? l))
        (or (p (car l)) (search p (cdr l)))))
+; Важно свойство: Ако p връща "свидетел" на истинността на свойството p (както
+; например memv или assv), то search също връща този "свидетел".
+; Пример:
+(define (assq key al)
+  (search (lambda (kv) (and (eq? (car kv) key) kv)) al))
+
 
 ;;; Графи
 ; Графите се представят чрез асоциативни списъци
@@ -231,3 +238,77 @@
 
 (define (search-child v f g)
   (search f (children v g)))
+
+; Абстракция за граф чрез капсулация:
+(define (make-graph g)
+  (define (self prop . params)
+    (case prop
+      ('print g)
+      ('vertices (keys g))
+      ('children (let ((v (car params)))
+                   (cdr (assv v g))))
+      ('edge? (let ((u (car params)) (v (cadr params)))
+               (memv v (self 'children u))))
+      ('map-children (let ((v (car params))
+                           (f (cadr params)))
+                       (map f (self 'children v))))
+      ('search-child (let ((v (car params))
+                           (f (cadr params)))
+                       (search f (self 'children v))))))
+  self)
+
+; Задачи:
+; 1) Да се намерят върховете, които нямат деца.
+(define (find-childless g)
+  (filter (lambda (v) (null? (children v g))) (vertices g)))
+
+; 2) Да се намерят родителите на даден връх.
+(define (parents g vert)
+  (filter (lambda (v) (edge? v vert g)) (vertices g)))
+
+; 3) Да се провери дали граф е симетричен.
+; Ако u -> v => v -> u за всяко u,v
+(define (symmetric? g)
+  (all? (lambda (u)
+          (all? (lambda (v) (edge? v u g))
+                (children u g)))
+        (vertices g)))
+
+; Обхождане на граф
+; Обхождане в дълбочина
+;(define (dfs u g)
+;  (map (lambda (v) (? (dfs v g)))
+;     (children u g)))
+
+; Търсене на път в дълбочина
+(define (dfs-path u v g)
+  (define (dfs-search path)
+    (let ((current (car path)))
+      (cond ((eqv? current v) (reverse path))
+            ((memv current (cdr path)) #f)
+            (else (search-child current
+                                (lambda (w) (dfs-search (cons w path))) g)))))
+    (dfs-search (list u)))
+
+; Обхождане в ширина
+#|(define (bfs u g)
+  (define (bfs-level l)
+    (if (null? l) <дъно>
+        (bfs-level
+         (<функция-за-обработка> (lambda (v) (children v g))
+                                 l))))
+  (bfs-level (list u)))
+|#
+
+#|(define (extend path)
+  (map-children (car path)
+                (lambda (w) (cons w path)) g))
+
+(define (remains-acyclic? path)
+  (not (memv (car path) (cdr path))))
+
+(define (extend-acyclic path)
+  (filter remains-acyclic? (extend path)))
+|#
+
+; TODO: Търсене на най-кратък път от u до v, ако има такъв
