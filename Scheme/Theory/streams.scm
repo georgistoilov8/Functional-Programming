@@ -34,7 +34,9 @@
 ; (h . t) -> h е произволен елемент, t - обещание
 
 (define the-empty-stream '())
-(define (cons-stream h t) (cons h (delay t)))
+;(define (cons-stream h t) (cons h (delay t)))
+(define-syntax cons-stream (syntax-rules () ((cons-stream h t) (cons h (delay t)))))
+
 (define head car)
 (define (tail s) (force (cdr s)))
 (define empty-stream? null?)
@@ -65,7 +67,7 @@
 
 ; Безкрайни потоци:
 (define (from n) (cons-stream n (from (+ n 1))))
-;(define nats (from 0))
+(define nats (from 0))
 
 ; Да се генерира поток от числата на Фибоначи:
 (define (generate-fibs a b)
@@ -93,5 +95,9 @@
                (apply map-stream2 f (map tail streams))))
 
 ; Можем да дефинираме потоци чрез директна рекурсия:
-;(define ones2 (cons-stream 1 ones2))
-;(define nats (cons-stream 0 (zip-streams + ones nats))) 
+;(define ones (cons-stream 1 ones))
+;(define nats (cons-stream 0 (zip-stream + ones nats)))
+
+(define (take n s)
+  (if (= n 0) '()
+      (cons (head s) (take (- n 1) (tail s)))))
