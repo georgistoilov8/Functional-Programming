@@ -1,3 +1,5 @@
+
+
 {-
     Functions
 -}
@@ -50,6 +52,9 @@ get_grade x
 fact2 n = let fact n = if n == 0 then 1 else n * fact(n-1)
           in (fact n)^2
 
+fact3 n = (fact n)^3
+    where fact n = if n == 0 then 1 else n*fact(n-1)
+
 {-
     Local definition with where
     <definition-of-function>
@@ -72,3 +77,32 @@ quadratic a b c
   | d == 0 = "Has only one root"
   | otherwise = "Has no roots"
   where d = b*b - 4*a*c
+
+
+-- Test
+-- 1)
+f1 1 = 1
+f1 x = x + 3
+
+f x
+  | x == 0 = 1
+  | x >  0 = 2
+
+f3 3 = 5
+f3 x
+ | x > 3 = x + 2
+ | otherwise = error "Invalid case"
+
+f4 x = if x > 0 then 1 else x + 2
+-- -----------------------------------------
+c = let a = 3 in a + 2
+
+                    
+fact4 n = (fact n)^3 
+ where fact n = if n == 0 then 1 else n * fact (n-1)                      
+
+
+-- 5)
+--  let може да се използва само при дефиниция на функция.
+-- Дефинициите с let важат във всички алтернативни дефиниции на функцията, направени с използване на пазачи.
+-- 
